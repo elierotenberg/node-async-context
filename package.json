@@ -1,0 +1,29 @@
+{
+  "name": "algebraic-effects-experiments",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "repository": "git@github.com:elierotenberg/algebraic-effects-experiments",
+  "author": "Elie Rotenberg <elie@rotenberg.io>",
+  "license": "UNLICENSED",
+  "scripts": {
+    "make:lint": "eslint src/**/*.js",
+    "make:clean": "rimraf dist",
+    "make:build": "yarn run clean && mkdir dist && cp -r src/* dist && babel src -d dist --source-maps",
+    "make": "yarn run make:build"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.25.0",
+    "babel-eslint": "^7.2.3",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-latest": "^6.24.1",
+    "babel-register": "^6.24.1",
+    "babel-runtime": "^6.25.0",
+    "eslint": "^4.4.0",
+    "eslint-plugin-prettier": "^2.1.2",
+    "prettier": "^1.5.3",
+    "rimraf": "^2.6.1"
+  }
+}
