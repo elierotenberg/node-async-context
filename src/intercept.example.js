@@ -3,6 +3,7 @@ const print = effect('print');
 const sleep = effect('sleep');
 const get = effect('get');
 const set = effect('set');
+const notImplemented = effect('notImplemented');
 
 function* initializeStores(values) {
   for (const key of Object.keys(values)) {
@@ -29,6 +30,7 @@ function* doWork() {
   })(function*() {
     yield sleep(1000);
     yield* displayStores(['foo', 'fizz']);
+    yield notImplemented();
     return yield Promise.resolve(42);
   });
 }
