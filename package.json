@@ -28,5 +28,8 @@
     "pretty-error": "^2.1.1",
     "rimraf": "^2.6.1",
     "source-map-support": "^0.4.15"
+  },
+  "dependencies": {
+    "shortid": "^2.2.8"
   }
 }
