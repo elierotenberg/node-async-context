@@ -8,25 +8,30 @@ const runMicroTask = fn => Promise.resolve().then(fn);
 const Coroutine = inspectable(
   class Coroutine extends EventEmitter {
     static get context() {
-      return currentCoroutine.context;
+      return currentCoroutine ? currentCoroutine.context : null;
     }
 
-    static spawn(...args) {
-      return new this(...args).join();
+    static get props() {
+      return currentCoroutine ? currentCoroutine.props : [];
+    }
+
+    static get monitor() {
+      return currentCoroutine ? currentCoroutine.monitor : null;
+    }
+
+    static create(monitor, task, context) {
+      return (...props) => new Coroutine(monitor, task, props, context);
     }
 
     static toJS() {
       return currentCoroutine.toJS();
     }
 
-    constructor(
-      fn,
-      context = currentCoroutine.context,
-      monitor = currentCoroutine.monitor,
-    ) {
+    constructor(monitor, task, props, context = Coroutine.context) {
       super();
-      this._fn = fn;
       this.monitor = monitor;
+      this.task = task.bind(null, props);
+      this.props = props;
       this.context = context;
 
       this._parentNode = this.monitor.getCurrentNode();
@@ -45,12 +50,17 @@ const Coroutine = inspectable(
       return {
         listeners: super.toJS().listeners,
         nodes: Array.from(this._nodes, inspectable.toJS),
+        props: inspectable.toJS(this.props),
         context: inspectable.toJS(this.context),
       };
     }
 
     join() {
       return this._promise;
+    }
+
+    getNodes() {
+      return this._nodes;
     }
 
     emit(...args) {
@@ -64,7 +74,7 @@ const Coroutine = inspectable(
       this.monitor.addListener('addNode', this._onMonitorAddNode);
       this.monitor.addListener('removeNode', this._onMonitorRemoveNode);
       try {
-        return await runMicroTask(this._fn);
+        return await runMicroTask(this.task);
       } finally {
         this.monitor.removeListener('removeListener', this._onMonitorAddNode);
         this.monitor.removeListener(
@@ -78,15 +88,19 @@ const Coroutine = inspectable(
       if (this.monitor.isAncestorNode(this._node, node)) {
         this._nodes.add(node);
         currentCoroutine = this;
+        this.monitor.constructor.log(`(++) ${this._nodes.size}`);
       }
     }
 
     _onMonitorRemoveNode(node) {
-      this._nodes.delete(node);
+      if (this._nodes.has(node)) {
+        this._nodes.delete(node);
+        this.monitor.constructor.log(`(--) ${this._nodes.size}`);
+      }
     }
   },
 );
 
-Coroutine.spawn = Coroutine.spawn.bind(Coroutine);
+Coroutine.create = Coroutine.create.bind(Coroutine);
 
 module.exports = Coroutine;

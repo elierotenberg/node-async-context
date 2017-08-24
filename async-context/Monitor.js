@@ -169,4 +169,6 @@ const Monitor = inspectable(
   },
 );
 
+Monitor.log = Monitor.log.bind(Monitor);
+
 module.exports = Monitor;
