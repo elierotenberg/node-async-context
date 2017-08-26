@@ -4,6 +4,7 @@ const util = require('util');
 
 const EventEmitter = require('./EventEmitter');
 const inspectable = require('./inspectable');
+const { getLocation } = require('./trace');
 
 const LIFECYCLE = {
   STARTED: 'STARTED',
@@ -11,14 +12,20 @@ const LIFECYCLE = {
 };
 
 const Node = inspectable(
-  class Node extends EventEmitter {
-    constructor(resourceId, parentResourceId, type) {
-      super();
+  class Node {
+    constructor(resourceId, parentResourceId, type, location) {
       this.resourceId = resourceId;
       this.parentResourceId = parentResourceId;
       this.type = type;
+      this.location = location;
+      this.annotations = new Map();
+      this.children = new Set();
+
       this._lifecycleStatus = this.constructor.LIFECYCLE.STARTED;
-      this._children = new Set();
+    }
+
+    get lifecycleStatus() {
+      return this._lifecycleStatus;
     }
 
     toJS() {
@@ -27,13 +34,18 @@ const Node = inspectable(
         parentResourceId: this.parentResourceId,
         type: this.type,
         lifecycleStatus: this._lifecycleStatus,
-        children: Array.from(this._children, inspectable.toJS),
-        listeners: super.toJS().listeners,
+        annotations: Array.from(
+          this.annotations,
+        ).reduce((obj, [key, value]) => {
+          obj[key] = inspectable.toJS(value);
+          return obj;
+        }, {}),
+        children: Array.from(this.children, inspectable.toJS),
       };
     }
 
     isLeaf() {
-      return this._children.size === 0;
+      return this.children.size === 0;
     }
 
     isDestroyed() {
@@ -44,20 +56,15 @@ const Node = inspectable(
       this._lifecycleStatus = this.constructor.LIFECYCLE.DESTROYED;
       return this;
     }
-
-    addChild(node) {
-      this._children.add(node);
-      return this;
-    }
-
-    removeChild(node) {
-      this._children.delete(node);
-      return this;
-    }
   },
 );
 
 Node.LIFECYCLE = LIFECYCLE;
+
+const defaultOpts = {
+  maxListeners: Infinity,
+  recordStackTraces: false,
+};
 
 const Monitor = inspectable(
   class Monitor extends EventEmitter {
@@ -68,8 +75,10 @@ const Monitor = inspectable(
       );
     }
 
-    constructor() {
+    constructor(_opts = {}) {
       super();
+      this.opts = Object.assign({}, defaultOpts, _opts);
+      this.setMaxListeners(this.opts.maxListeners);
       // node.resourceId -> node
       this._nodes = new Map();
       // All nodes in _rootNodes are also in _nodes
@@ -87,6 +96,10 @@ const Monitor = inspectable(
         rootNodes: Array.from(this._rootNodes, inspectable.toJS),
         listeners: super.toJS().listeners,
       };
+    }
+
+    getRootNodes() {
+      return this._rootNodes.values();
     }
 
     getCurrentNode() {
@@ -123,7 +136,7 @@ const Monitor = inspectable(
       this._nodes.set(node.resourceId, node);
       const parentNode = this._nodes.get(node.parentResourceId);
       if (parentNode) {
-        parentNode.addChild(node);
+        parentNode.children.add(node);
       } else {
         this._rootNodes.add(node);
       }
@@ -132,30 +145,37 @@ const Monitor = inspectable(
     }
 
     _removeNode(node) {
-      const parentNode = this._nodes.get(node.parentResourceId);
-      if (parentNode) {
-        parentNode.removeChild(node);
-        if (parentNode.isDestroyed()) {
-          this._collectGarbage(parentNode);
-        }
-      }
       node.destroy();
       this._collectGarbage(node);
-      this.emit('removeNode', node, parentNode);
+      this.emit('removeNode', node);
     }
 
     _collectGarbage(node) {
       // A node can only be garbage collected after all of its children have destroyed
-      if (node.isLeaf()) {
+      if (node.isDestroyed() && node.isLeaf()) {
         this.emit('collectGarbage', node);
+        const parentNode = this.getParentNode(node);
+        if (parentNode) {
+          parentNode.children.delete(node);
+          this._collectGarbage(parentNode);
+        }
         this._nodes.delete(node.resourceId);
-        this._rootNodes.delete(node);
+        if (this._rootNodes.has(node)) {
+          this._rootNodes.delete(node);
+        }
       }
     }
 
     _onInitHook(resourceId, type, parentResourceId) {
       this.emit('init', resourceId, type, parentResourceId);
-      this._addNode(new Node(resourceId, parentResourceId, type));
+      this._addNode(
+        new Node(
+          resourceId,
+          parentResourceId,
+          type,
+          this.opts.recordStackTraces ? getLocation() : null,
+        ),
+      );
     }
 
     _onDestroyHook(resourceId) {

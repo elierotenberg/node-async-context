@@ -1,0 +1,2 @@
+*.dist.html linguist-vendored
+*.dist.js linguist-vendored

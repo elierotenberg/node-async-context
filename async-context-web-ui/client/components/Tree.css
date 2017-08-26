@@ -1,0 +1,46 @@
+.Tree,
+.Tree__Node {
+  position: relative;
+}
+
+.Tree {
+  list-style: none;
+  padding-left: 32px;
+}
+
+.Tree__Node::before,
+.Tree__Node::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+}
+
+.Tree__Node::before {
+  border-top: 1px solid #000;
+  top: 9px;
+  width: 8px;
+  height: 0;
+}
+
+.Tree__Node::after {
+  border-left: 1px solid #000;
+  height: 100%;
+  width: 0px;
+  top: 2px;
+}
+
+.Tree > .Tree__Node:last-child::after {
+  height: 8px;
+}
+
+.Tree__Node:not(.Tree__Node__inline) .Tree__Node__Name {
+  cursor: pointer;
+}
+
+.Tree__Node.Tree__Node__inline > * {
+  display: inline-block;
+}
+
+.Tree__Node.Tree__Node__inline > .Tree__Node__Name {
+  margin-right: 10px;
+}

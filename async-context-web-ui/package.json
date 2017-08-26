@@ -1,0 +1,16 @@
+{
+  "name": "async-context-ui-server",
+  "version": "0.0.0",
+  "description": "UI server for node-async-context",
+  "main": "server/index.js",
+  "repository": "git@github.com:elierotenberg/node-async-context",
+  "author": "Elie Rotenberg",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^15.6.1",
+    "prop-types": "^15.5.10"
+  },
+  "dependencies": {
+    "axios": "^0.16.2"
+  }
+}
