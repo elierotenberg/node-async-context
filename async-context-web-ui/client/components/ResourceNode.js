@@ -5,17 +5,31 @@ require('./ResourceNode.css');
 const Tree = require('./Tree');
 
 const ResourceNode = ({ children: resource }) => {
-  const resourceName = (
-    <span className="ResourceNode__ResourceName">
-      {resource.type}#{resource.resourceId}
-    </span>
-  );
   const coroutine = resource.annotations.coroutine;
   const coroutineName = coroutine
     ? <span className="ResourceNode__CoroutineName">
         {coroutine.name}#{coroutine.id}
       </span>
     : null;
+
+  const resourceName = (
+    <span className="ResourceNode__ResourceName">
+      {resource.type}#{resource.resourceId}
+    </span>
+  );
+
+  const age = (
+    <span className="ResourceNode__Age">
+      {resource.ageInMs}
+    </span>
+  );
+
+  const executionAsyncId = (
+    <span className="ResourceNode__ExecutionAsyncId">
+      {resource.executionAsyncId}
+    </span>
+  );
+
   return (
     <Tree.Node
       name={
@@ -24,6 +38,8 @@ const ResourceNode = ({ children: resource }) => {
         >
           {coroutineName}
           {resourceName}
+          {age}
+          {executionAsyncId}
         </span>
       }
     >

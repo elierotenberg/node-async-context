@@ -28,8 +28,10 @@ const Coroutine = inspectable(
       return currentCoroutine ? currentCoroutine.monitor : null;
     }
 
-    static create(monitor, name, task, context) {
-      return (...props) => new Coroutine(monitor, name, task, props, context);
+    static spawn(monitor) {
+      return function spawn(name, task, props = null, context = null) {
+        return new Coroutine(monitor, name, task, props, context);
+      };
     }
 
     static toJS() {
@@ -88,7 +90,5 @@ const Coroutine = inspectable(
     }
   },
 );
-
-Coroutine.create = Coroutine.create.bind(Coroutine);
 
 module.exports = Coroutine;

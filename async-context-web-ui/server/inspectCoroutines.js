@@ -9,6 +9,8 @@ const extractCoroutines = (
     resourceId: currentNode.resourceId,
     type: currentNode.type,
     lifecycleStatus: currentNode.lifecycleStatus,
+    ageInMs: currentNode.ageInMs,
+    executionAsyncId: currentNode.executionAsyncId,
     location: currentNode.location,
     annotations: Array.from(
       currentNode.annotations.entries(),

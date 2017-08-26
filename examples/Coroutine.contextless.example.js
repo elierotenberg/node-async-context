@@ -21,33 +21,38 @@ const fetchUserNickname = async userId => {
   return `/${userId}/userNickname`;
 };
 
-const monitor = new Monitor({ recordStackTraces: true });
+const requestHandler = async userId => {
+  const [description, nickName] = await Promise.all([
+    fetchUserDescription(userId),
+    fetchUserNickname(userId),
+  ]);
+  return { description, nickName };
+};
+
+// This monitor will maintain a lightweight representation of the ongoing async call tree
+const monitor = new Monitor({
+  recordTypes: true, // Record call types
+  recordTimings: true, // Record call ages
+  recordLocations: true, // Record call location stack (for debugging)
+});
+
+// This server will expose this representation as a real-time web UI
 const monitorUIServer = new MonitorUIServer(monitor);
+http.createServer(monitorUIServer.serve).listen(8081);
 
-const spawnRequestHandler = Coroutine.create(
-  monitor,
-  'requestHandler',
-  async userId => {
-    const [description, nickName] = await Promise.all([
-      fetchUserDescription(userId),
-      fetchUserNickname(userId),
-    ]);
-    return { description, nickName };
-  },
-);
+// We create a spawn operator to instrument the call tree monitor
+const spawn = Coroutine.spawn(monitor);
 
-const spawnServer = Coroutine.create(monitor, 'server', async () => {
+// This marks this call as a named coroutine
+spawn('server', async () => {
   http
     .createServer(async (req, res) => {
       const userId = url.parse(req.url, true).query.userId;
-      const proc = spawnRequestHandler(userId);
-      const info = await proc.join();
+      // On each incoming request, mark the call as a separate child coroutine and awaits its completion
+      const info = await spawn('requestHandler', requestHandler, userId).join();
       res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
       res.end(JSON.stringify(info));
+      // Everything is automatically garbage-collected unless requestHandler code is leaking (resources or errors)
     })
     .listen(8080);
-
-  http.createServer(monitorUIServer.serve).listen(8081);
 });
-
-spawnServer();

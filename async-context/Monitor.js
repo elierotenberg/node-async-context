@@ -13,10 +13,19 @@ const LIFECYCLE = {
 
 const Node = inspectable(
   class Node {
-    constructor(resourceId, parentResourceId, type, location) {
+    constructor(
+      resourceId,
+      parentResourceId,
+      executionAsyncId,
+      type = null,
+      creationTime = null,
+      location = null,
+    ) {
       this.resourceId = resourceId;
       this.parentResourceId = parentResourceId;
+      this.executionAsyncId = executionAsyncId;
       this.type = type;
+      this.creationTime = creationTime;
       this.location = location;
       this.annotations = new Map();
       this.children = new Set();
@@ -28,11 +37,22 @@ const Node = inspectable(
       return this._lifecycleStatus;
     }
 
+    get ageInMs() {
+      if (this.creationTime === null) {
+        return null;
+      }
+      const [seconds, nanoseconds] = process.hrtime(this.creationTime);
+      return Math.ceil(seconds * 1e3 + nanoseconds * 1e-6);
+    }
+
     toJS() {
       return {
         resourceId: this.resourceId,
         parentResourceId: this.parentResourceId,
+        executionAsyncId: this.executionAsyncId,
         type: this.type,
+        location: this.location,
+        ageInMs: this.ageInMs,
         lifecycleStatus: this._lifecycleStatus,
         annotations: Array.from(
           this.annotations,
@@ -63,7 +83,9 @@ Node.LIFECYCLE = LIFECYCLE;
 
 const defaultOpts = {
   maxListeners: Infinity,
-  recordStackTraces: false,
+  recordTypes: true,
+  recordTimings: false,
+  recordLocations: false,
 };
 
 const Monitor = inspectable(
@@ -167,13 +189,16 @@ const Monitor = inspectable(
     }
 
     _onInitHook(resourceId, type, parentResourceId) {
+      const executionAsyncId = asyncHooks.executionAsyncId();
       this.emit('init', resourceId, type, parentResourceId);
       this._addNode(
         new Node(
           resourceId,
           parentResourceId,
-          type,
-          this.opts.recordStackTraces ? getLocation() : null,
+          executionAsyncId,
+          this.opts.recordTypes ? type : null,
+          this.opts.recordTimings ? process.hrtime() : null,
+          this.opts.recordLocations ? getLocation() : null,
         ),
       );
     }
