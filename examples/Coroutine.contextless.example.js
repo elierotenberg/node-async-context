@@ -21,7 +21,7 @@ const fetchUserNickname = async userId => {
   return `/${userId}/userNickname`;
 };
 
-const requestHandler = async userId => {
+const requestHandler = userId => async () => {
   const [description, nickName] = await Promise.all([
     fetchUserDescription(userId),
     fetchUserNickname(userId),
@@ -49,7 +49,7 @@ spawn('server', async () => {
     .createServer(async (req, res) => {
       const userId = url.parse(req.url, true).query.userId;
       // On each incoming request, mark the call as a separate child coroutine and awaits its completion
-      const info = await spawn('requestHandler', requestHandler, userId).join();
+      const info = await spawn('requestHandler', requestHandler(userId));
       res.writeHead(200, { 'Content-Type': 'application/json; charset=UTF-8' });
       res.end(JSON.stringify(info));
       // Everything is automatically garbage-collected unless requestHandler code is leaking (resources or errors)

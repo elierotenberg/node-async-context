@@ -1,22 +1,21 @@
-.ResourceNode__Name {
+.BaseResourceNode__Name,
+.CoroutineNode__Name {
   font-family: monospace;
 }
-
-.ResourceNode__Name > * {
+.BaseResourceNode__Name > *,
+.CoroutineNode__Name {
   padding-left: 3px;
   padding-right: 3px;
 }
 
-.ResourceNode__CoroutineName {
-  background-color: rgb(0, 209, 255);
-  font-weight: bolder;
-  font-size: larger;
+.CoroutineNode__Name {
+  background-color: rgba(0, 220, 255, 1);
 }
 
-.ResourceNode__Name__DESTROYED .ResourceNode__ResourceName {
-  background-color: rgba(199, 199, 199, 0.3);
+.BaseResourceNode__Name__DESTROYED {
+  background-color: rgba(238, 26, 161, 0.2);
 }
 
-.ResourceNode__Name__STARTED .ResourceNode__ResourceName {
-  background-color: rgba(163, 230, 0, 0.3);
+.BaseResourceNode__Name__STARTED {
+  background-color: rgba(36, 255, 0, 0.52);
 }

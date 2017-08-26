@@ -1,45 +1,33 @@
 const React = require('react');
 const PropTypes = require('prop-types');
+const moment = require('moment');
 
 require('./ResourceNode.css');
 const Tree = require('./Tree');
 
+const humanize = ms => {
+  const d = moment.duration(ms);
+  const p = n => `${n}`.padStart(2, '0');
+  return `${p(d.hours())}h${p(d.minutes())}m${p(d.seconds())}s`;
+};
+
 const ResourceNode = ({ children: resource }) => {
-  const coroutine = resource.annotations.coroutine;
-  const coroutineName = coroutine
-    ? <span className="ResourceNode__CoroutineName">
-        {coroutine.name}#{coroutine.id}
-      </span>
-    : null;
-
-  const resourceName = (
-    <span className="ResourceNode__ResourceName">
-      {resource.type}#{resource.resourceId}
-    </span>
-  );
-
-  const age = (
-    <span className="ResourceNode__Age">
-      {resource.ageInMs}
-    </span>
-  );
-
-  const executionAsyncId = (
-    <span className="ResourceNode__ExecutionAsyncId">
-      {resource.executionAsyncId}
-    </span>
-  );
-
-  return (
+  const baseResourceNode = (
     <Tree.Node
+      className={'BaseResourceNode'}
       name={
         <span
-          className={`ResourceNode__Name ResourceNode__Name__${resource.lifecycleStatus}`}
+          className={`BaseResourceNode__Name BaseResourceNode__Name__${resource.lifecycleStatus}`}
         >
-          {coroutineName}
-          {resourceName}
-          {age}
-          {executionAsyncId}
+          <span className="BaseResourceNode__ResourceName">
+            {resource.type}#{resource.resourceId}
+          </span>
+          <span className="BaseResourceNode__Age">
+            {humanize(resource.ageInMs)}
+          </span>
+          <span className="BaseResourceNode__ExecutionAsyncId">
+            {resource.executionAsyncId}
+          </span>
         </span>
       }
     >
@@ -49,6 +37,27 @@ const ResourceNode = ({ children: resource }) => {
             {resource}
           </ResourceNode>,
         )}
+      </Tree>
+    </Tree.Node>
+  );
+
+  const coroutine = resource.annotations.coroutine;
+
+  if (!coroutine) {
+    return baseResourceNode;
+  }
+
+  return (
+    <Tree.Node
+      className={'CoroutineNode'}
+      name={
+        <span className="CoroutineNode__Name">
+          {coroutine.name}@{coroutine.id}
+        </span>
+      }
+    >
+      <Tree>
+        {baseResourceNode}
       </Tree>
     </Tree.Node>
   );

@@ -7,10 +7,11 @@
   "author": "Elie Rotenberg",
   "license": "MIT",
   "peerDependencies": {
-    "react": "^15.6.1",
-    "prop-types": "^15.5.10"
+    "prop-types": "^15.5.10",
+    "react": "^15.6.1"
   },
   "dependencies": {
-    "axios": "^0.16.2"
+    "axios": "^0.16.2",
+    "moment": "^2.18.1"
   }
 }
