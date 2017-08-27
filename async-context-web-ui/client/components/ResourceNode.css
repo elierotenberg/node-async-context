@@ -19,3 +19,7 @@
 .BaseResourceNode__Name__STARTED {
   background-color: rgba(36, 255, 0, 0.52);
 }
+
+.BaseResourceNode__Chevron {
+  cursor: pointer;
+}

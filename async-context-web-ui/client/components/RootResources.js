@@ -4,10 +4,18 @@ const PropTypes = require('prop-types');
 const Tree = require('./Tree');
 const ResourceNode = require('./ResourceNode');
 
-const RootResources = ({ rootResources }) =>
+const RootResources = ({
+  rootResources,
+  onSelectResource,
+  onSelectCoroutine,
+}) =>
   <Tree>
     {rootResources.map(resource =>
-      <ResourceNode key={resource.resourceId}>
+      <ResourceNode
+        key={resource.resourceId}
+        onSelectResource={onSelectResource}
+        onSelectCoroutine={onSelectCoroutine}
+      >
         {resource}
       </ResourceNode>,
     )}
@@ -15,6 +23,8 @@ const RootResources = ({ rootResources }) =>
 
 RootResources.propTypes = {
   rootResources: PropTypes.array.isRequired,
+  onSelectResource: PropTypes.function,
+  onSelectCoroutine: PropTypes.function,
 };
 
 module.exports = RootResources;

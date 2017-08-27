@@ -4,6 +4,7 @@ const PropTypes = require('prop-types');
 const { Component } = React;
 
 const RootResources = require('./RootResources');
+const Selection = require('./Selection');
 
 class Coroutines extends Component {
   constructor(props, context) {
@@ -12,7 +13,10 @@ class Coroutines extends Component {
       err: null,
       res: null,
       isMounted: false,
+      selection: null,
     };
+    this.selectResource = this.selectResource.bind(this);
+    this.selectCoroutine = this.selectCoroutine.bind(this);
     this._scheduleNextFetch = this._scheduleNextFetch.bind(this);
     this._fetch = this._fetch.bind(this);
     this._fetchDidResolve = this._fetchDidResolve.bind(this);
@@ -30,6 +34,41 @@ class Coroutines extends Component {
 
   get isMounted() {
     return this.state.isMounted;
+  }
+
+  selectResource(e, resource) {
+    this.setState(({ selection }) => {
+      if (
+        selection &&
+        selection[0] === Selection.Resource &&
+        selection[1] === resource
+      ) {
+        return {
+          selection: null,
+        };
+      }
+      return {
+        selection: [Selection.Resource, resource],
+      };
+    });
+  }
+
+  selectCoroutine(e, coroutine, resource) {
+    this.setState(({ selection }) => {
+      if (
+        selection &&
+        selection[0] === Selection.Coroutine &&
+        selection[1] === resource &&
+        selection[2] === coroutine
+      ) {
+        return {
+          selection: null,
+        };
+      }
+      return {
+        selection: [Selection.Coroutine, resource, coroutine],
+      };
+    });
   }
 
   _scheduleNextFetch() {
@@ -63,7 +102,7 @@ class Coroutines extends Component {
   }
 
   render() {
-    const { err, res } = this.state;
+    const { err, res, selection } = this.state;
     if (err) {
       return (
         <pre>
@@ -72,7 +111,23 @@ class Coroutines extends Component {
       );
     }
     if (res) {
-      return <RootResources rootResources={res.rootResources} />;
+      return (
+        <div className="Coroutines">
+          <div className="Coroutines__RootResources">
+            <RootResources
+              rootResources={res.rootResources}
+              onSelectNode={this.selectResource}
+              onSelectCoroutine={this.selectCoroutine}
+            />
+          </div>
+          <div className="Coroutines__Selection">
+            <Selection
+              selection={selection}
+              rootResources={res.rootResources}
+            />
+          </div>
+        </div>
+      );
     }
     return (
       <div>
