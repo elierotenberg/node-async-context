@@ -5,5 +5,9 @@
   "main": "index.js",
   "repository": "git@github.com:elierotenberg/node-async-context",
   "author": "Elie Rotenberg",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "performance-now": "^2.1.0",
+    "zone.js": "^0.8.17"
+  }
 }
